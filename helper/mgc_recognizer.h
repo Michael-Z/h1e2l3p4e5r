@@ -18,7 +18,10 @@ enum class MisrecMode {IGNORE, SIMPLE_REQUESTING};
 class MGC_Recognizer : public MGC_Element
 {
 public:
-    QString m_recognizedMaskName = QStringLiteral("");
+    QString m_recMask = "";
+    QString m_recMaskLastValue = "";
+    double m_resDiff;
+    QHash<QString, int> m_resDiffs;
     QList<QPoint> m_foundPoints;
 
     DrawMode m_drawMode = DrawMode::ELEMENT_MAT;
@@ -53,6 +56,10 @@ public:
 
     MisrecMode m_misrecMode = MisrecMode::IGNORE;
     int m_nameCounter = 0;
+signals:
+
+public slots:
+
 };
 
 #endif // MGC_RECOGNIZER_H

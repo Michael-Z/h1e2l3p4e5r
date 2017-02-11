@@ -3,6 +3,7 @@
 
 #include "deps.h"
 
+#include <QString>
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QLineEdit>
@@ -15,6 +16,7 @@
 #include "mgc_recognizer.h"
 #include <QAbstractButton>
 
+#include <QtMultimedia/QSound>
 
 class MGC_Recognizer;
 
@@ -27,8 +29,7 @@ public:
     QString m_newMaskName;
     bool m_hasMaskAdded = false;
 
-    AddNewMaskHelper(QHash<QString, int> masksDifferencies,
-                     QString path, Mat &templateMaskMat, QPoint parentPos);
+    AddNewMaskHelper(const MGC_Recognizer *elem);
 
     QVBoxLayout *verticalLayout;
     QLabel *templateMask;

@@ -7,25 +7,28 @@
 #include "mgc_recognizer.h"
 #include "mgc_player.h"
 #include "mgc_screen.h"
+#include "solvershell.h"
+#include "game.h"
 
 class MGC_Player;
+class Game;
 
 class MGC_Table : public MGC_Element
 {
-public:            
+public:
+
     MGC_Recognizer *m_tableId = nullptr;
     MGC_Recognizer *m_baseOffsetSign = nullptr;
     QPoint m_baseOffsetSignOffset;
 
-    int m_disappearedCounter = 0;
-
     MGC_Table(QString id, MGC_Element *parent,
-              const QJsonObject &settings, const QPoint &singPoint);    
+              const QJsonObject &settings, const QPoint &singPoint);
+    virtual ~MGC_Table() override;
 
     virtual bool processOnDown() override;
     virtual void processOnUp() override;
 
-private:
+public:
 
     enum class TableGameSizeType {HU, MAX6, MAX9};
     TableGameSizeType tableGameSize = TableGameSizeType::MAX6;
@@ -41,6 +44,14 @@ private:
 
     QRect m_baseSingLookupArea;
     int m_destroy_after_disable;
+
+    Game *m_game = nullptr;
+    SolverShell *m_solverShell = nullptr;
+
+signals:
+
+public slots:
+
 };
 
 #endif // MGC_TABLE_H

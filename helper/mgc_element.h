@@ -25,8 +25,10 @@ public:
     QLabel *m_elementWidget;
     bool m_isVisible = true;
     bool m_isAvailable = true;
+    bool m_isCovered = false;
+    int m_isCoveredCounter = 0;
 
-    bool doDrawElementMat = false;
+    bool m_doDrawElementMat = false;
 
     MGC_Element *m_parent;
     QHash<QString, MGC_Element*> m_children;
@@ -42,10 +44,10 @@ public:
     virtual void show();
     virtual void hide();
 
-    virtual bool refreshElementMat();
+    virtual bool refreshElementMat();    
 
     void showElementMat() const;
-    void showMat(const Mat &mat, String winName) const;
+    void showMat(const Mat &mat, String winName = "win") const;
 
     void setBorder(QString width, QString style, QString color);
 

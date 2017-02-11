@@ -15,12 +15,35 @@ void MGC_Card::processOnUp()
 {
     m_suit->recognizeMaskInSet();
 
-    if (m_suit->m_recognizedMaskName.left(5) == QString("empty")) {
+    if (m_suit->m_recMask == "") {
         m_isVisible = false;
+        m_card = "";
+        m_isCovered = true;
+        m_isCoveredCounter++;
         return;
-    } else {
-        //throw "Need new mask?";
     }
-    m_value->recognizeMaskInSets(m_suit->m_recognizedMaskName);
+    m_isCovered = false;
+    m_isCoveredCounter = 0;
+    if (m_suit->m_recMask.left(5) == QString("empty")) {
+        m_isVisible = false;
+        m_card = "EMPTY";
+        return;
+    } else if (m_suit->m_recMask.left(4) == QString("hole")) {
+        m_isVisible = true;
+        m_card = "HOLE";
+        m_value->m_recMask = "";
+        m_value->m_isVisible = false;
+        return;
+    }
+    m_value->recognizeMaskInSets(m_suit->m_recMask);
+    if (m_value->m_recMask == "") {
+        m_isVisible = false;
+        m_card = "";
+        m_isCovered = true;
+        m_isCoveredCounter++;
+        return;
+    }
+    m_card = m_value->m_recMask + m_suit->m_recMask;    
+    m_value->m_isVisible = true;
     m_isVisible = true;
 }

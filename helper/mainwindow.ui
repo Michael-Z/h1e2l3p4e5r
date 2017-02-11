@@ -30,51 +30,6 @@
      <attribute name="title">
       <string>Main</string>
      </attribute>
-     <widget class="QTableWidget" name="tableWidget">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>390</y>
-        <width>241</width>
-        <height>281</height>
-       </rect>
-      </property>
-      <row>
-       <property name="text">
-        <string>bench</string>
-       </property>
-      </row>
-      <row>
-       <property name="text">
-        <string>detected</string>
-       </property>
-      </row>
-      <row>
-       <property name="text">
-        <string>tables</string>
-       </property>
-      </row>
-      <column>
-       <property name="text">
-        <string>values</string>
-       </property>
-      </column>
-      <item row="0" column="0">
-       <property name="text">
-        <string/>
-       </property>
-      </item>
-      <item row="1" column="0">
-       <property name="text">
-        <string/>
-       </property>
-      </item>
-      <item row="2" column="0">
-       <property name="text">
-        <string/>
-       </property>
-      </item>
-     </widget>
     </widget>
    </widget>
   </widget>

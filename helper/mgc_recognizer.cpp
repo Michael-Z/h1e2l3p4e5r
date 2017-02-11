@@ -59,13 +59,14 @@ int MGC_Recognizer::compare2Masks(Mask_t &mat1, Mask_t &mat2) const
 
 bool MGC_Recognizer::recognizeMask()
 {    
-    m_recognizedMaskName = "";
-    const int difference = compare2Masks(m_elementMat, m_mask);
+    if (m_recMask != "") m_recMaskLastValue = m_recMask;
+    m_recMask = "";
+    m_resDiff = compare2Masks(m_elementMat, m_mask);
     bool result = false;
-    if (m_tolerance > difference) result = true;
+    if (m_tolerance > m_resDiff) result = true;
 #ifdef DBG
     qDebug() << "recognizeMask"
-             << ", defference: " << difference
+             << ", defference: " << m_resDiff
              << ", result: " << result << "\n";
 #endif
     return result;
@@ -73,16 +74,17 @@ bool MGC_Recognizer::recognizeMask()
 
 bool MGC_Recognizer::recognizeMaskInSet(QString &maskName)
 {    
-    m_recognizedMaskName = "";
-    const int difference = compare2Masks(m_elementMat, m_maskSet[maskName]);
+    if (m_recMask != "") m_recMaskLastValue = m_recMask;
+    m_recMask = "";
+    m_resDiff = compare2Masks(m_elementMat, m_maskSet[maskName]);
     bool result = false;
-    if (m_tolerance > difference) {
+    if (m_tolerance > m_resDiff) {
         result = true;
         m_mask = m_maskSet[maskName];
     }
 #ifdef DBG
     qDebug() << "recognizeMaskInSet | maskName: " << maskName
-             << ", defference: " << difference
+             << ", defference: " << m_resDiff
              << ", result: " << result << "\n";
 #endif
     return true;
@@ -90,12 +92,13 @@ bool MGC_Recognizer::recognizeMaskInSet(QString &maskName)
 
 bool MGC_Recognizer::recognizeMaskInSet()
 {    
-    m_recognizedMaskName = "";
-    QHash<QString, int> masksDifferencies;
+    if (m_recMask != "") m_recMaskLastValue = m_recMask;
+    m_recMask = "";
+
     QStringList maskSetNames = m_maskSet.keys();
     for (QString maskName: maskSetNames) {
         Mask_t currentMaskMat = m_maskSet[maskName];
-        masksDifferencies.insert(maskName, compare2Masks(m_elementMat, currentMaskMat));
+        m_resDiffs.insert(maskName, compare2Masks(m_elementMat, currentMaskMat));
     }
 #ifdef DBG
     qDebug() << "recognizeMaskInSet | " << "\n";
@@ -104,7 +107,7 @@ bool MGC_Recognizer::recognizeMaskInSet()
     QString msg = "";
     double minValue(999999999); QString minName("");
     for (QString maskName: maskSetNames) {
-        int defference = masksDifferencies[maskName];
+        int defference = m_resDiffs[maskName];
 #ifdef DBG
         qDebug() << "maskName: " << maskName
                  << ", defference: " << defference << "\n";        
@@ -116,8 +119,8 @@ bool MGC_Recognizer::recognizeMaskInSet()
     }
 
     if (minName != "") {
-        m_recognizedMaskName = minName;
-        m_mask = m_maskSet[m_recognizedMaskName];
+        m_recMask = minName;
+        m_mask = m_maskSet[m_recMask];
 #ifdef DBG
         qDebug() << "m_resultMask was found | m_recognizedMaskName: " << m_recognizedMaskName
                  << " with m_tolerance: " << m_tolerance << "\n";
@@ -127,18 +130,19 @@ bool MGC_Recognizer::recognizeMaskInSet()
 #ifdef DBG
         qDebug() << "m_recognizedMaskName was't found | with m_tolerance: " << m_tolerance << "\n";
 #endif
+
         switch (m_misrecMode) {
         case MisrecMode::IGNORE: {
             break;
         }
-        case MisrecMode::SIMPLE_REQUESTING: {            
+        case MisrecMode::SIMPLE_REQUESTING: {
+            break; //switch adding mask for all
             QString tmpStyleSheet = m_elementWidget->styleSheet();
             m_elementWidget->setStyleSheet("QLabel {border: 1px solid yellow;}");            
             bool wasVisible;
             if (wasVisible = m_elementWidget->isVisible()) m_elementWidget->show();
 
-            AddNewMaskHelper *popUp = new AddNewMaskHelper(masksDifferencies, m_maskSet_path,
-                m_elementMat, m_elementWidget->mapToGlobal(QPoint(0, 0)));
+            AddNewMaskHelper *popUp = new AddNewMaskHelper(this);
             popUp->exec();
             if (popUp->m_hasMaskAdded) {
                 addMaskToMaskSetFromElementMat(popUp->m_newMaskName);
@@ -151,7 +155,6 @@ bool MGC_Recognizer::recognizeMaskInSet()
             } else {
                 m_elementWidget->hide();
             }
-    //        resolveMisrecRecogMaskBySimpleRequest(m_mask_path);
             break;
         }
         default:
@@ -165,12 +168,12 @@ bool MGC_Recognizer::recognizeMaskInSet()
 
 bool MGC_Recognizer::recognizeMaskInSets(QString &maskSetName)
 {    
-    m_recognizedMaskName = "";
-    QHash<QString, int> masksDifferencies;
+    if (m_recMask != "") m_recMaskLastValue = m_recMask;
+    m_recMask = "";
     QStringList maskSetNames = m_maskSets[maskSetName].keys();
     for (QString maskName: maskSetNames) {
         Mask_t currentMaskMat = m_maskSets[maskSetName][maskName];
-        masksDifferencies.insert(maskName, compare2Masks(m_elementMat, currentMaskMat));
+        m_resDiffs.insert(maskName, compare2Masks(m_elementMat, currentMaskMat));
     }    
 #ifdef DBG
     qDebug() << "recognizeMaskSet | maskSetName: " << maskSetName << "\n";
@@ -178,7 +181,7 @@ bool MGC_Recognizer::recognizeMaskInSets(QString &maskSetName)
 #endif
     double minValue(999999999); QString minName("");
     for (QString maskName: maskSetNames) {
-        int defference = masksDifferencies[maskName];
+        int defference = m_resDiffs[maskName];
 #ifdef DBG
         qDebug() << "maskName: " << maskName
                  << ", defference: " << defference << "\n";
@@ -190,8 +193,8 @@ bool MGC_Recognizer::recognizeMaskInSets(QString &maskSetName)
     }
 
     if (minName != "") {
-        m_recognizedMaskName = minName;
-        m_mask = m_maskSets[maskSetName][m_recognizedMaskName];
+        m_recMask = minName;
+        m_mask = m_maskSets[maskSetName][m_recMask];
 #ifdef DBG
         qDebug() << "m_resultMask was found | m_recognizedMaskName: " << m_recognizedMaskName
                  << " with m_tolerance: " << m_tolerance << "\n";
@@ -263,16 +266,6 @@ int MGC_Recognizer::findPoints(int matchAmount, QString &maskName)
     return resCouter;
 }
 
-void MGC_Recognizer::addMaskFromElementMat()
-{    
-    m_mask = m_elementMat;
-}
-
-void MGC_Recognizer::addMaskToMaskSetFromElementMat(QString &maskName)
-{    
-    m_maskSet.insert(maskName, m_elementMat);
-}
-
 void MGC_Recognizer::show()
 {
     switch(m_drawMode) {
@@ -282,7 +275,7 @@ void MGC_Recognizer::show()
         break;
 
     case DrawMode::MASK:
-        if (m_recognizedMaskName != QStringLiteral("")) {
+        if (m_recMask != QStringLiteral("")) {
             m_elementWidget->setGeometry(m_elementArea);
             m_elementWidget->setPixmap(convertMat2Pixmap(m_mask));
             m_elementWidget->show();
@@ -299,7 +292,7 @@ void MGC_Recognizer::show()
 
 void MGC_Recognizer::addAndSaveMask(QString &folder)
 {
-    if (m_recognizedMaskName != QString("")) return;
+    if (m_recMask != QString("")) return;
     addMaskToMaskSetFromElementMat(QString::number(m_nameCounter));
     QString path = glob().ROOM_DATA_PATH + "Masks/" + folder + QString("/")
             + QString::number(m_nameCounter) + QString(".bmp");
@@ -307,8 +300,12 @@ void MGC_Recognizer::addAndSaveMask(QString &folder)
     saveMatToFile(path, m_elementMat);
 }
 
-//void MGC_Recognizer::resolveMisrecRecogMaskBySimpleRequest(m_mask_path)
-//{
+void MGC_Recognizer::addMaskFromElementMat()
+{
+    m_mask = m_elementMat;
+}
 
-
-//}
+void MGC_Recognizer::addMaskToMaskSetFromElementMat(QString &maskName)
+{
+    m_maskSet.insert(maskName, m_elementMat);
+}

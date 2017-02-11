@@ -1,6 +1,8 @@
 #ifndef APP_H
 #define APP_H
 
+#include "server.h"
+
 #include "deps.h"
 #include "mac_utility.h"
 
@@ -21,6 +23,7 @@ signals:
 
 public slots:
     void processNextScreen();
+    void onConsolProcessOutput();
 
 private:
     QMainWindow *m_parent;
@@ -30,6 +33,9 @@ private:
 
     QJsonObject m_settings;
     QJsonObject m_roomSettings;
+
+    Server *m_server;
+    QProcess *m_process = nullptr;
 };
 
 #endif // APP_H

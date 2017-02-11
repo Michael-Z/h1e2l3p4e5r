@@ -5,6 +5,8 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT += multimedia
+QT += network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -34,7 +36,16 @@ SOURCES += main.cpp\
     mgc_table.cpp \
     mgc_player.cpp \
     mgc_card.cpp \
-    AddNewMaskHelper.cpp
+    AddNewMaskHelper.cpp \
+    mgc_stack.cpp \
+    game.cpp \
+    mgc_button.cpp \
+    mgc_recognizerexternalarea.cpp \
+    h_street.cpp \
+    solvershell.cpp \
+    gamestat.cpp \
+    solver.cpp \
+    server.cpp
 
 HEADERS  += mainwindow.h \    
     deps.h \
@@ -47,7 +58,16 @@ HEADERS  += mainwindow.h \
     mgc_table.h \
     mgc_player.h \
     mgc_card.h \
-    AddNewMaskHelper.h
+    AddNewMaskHelper.h \
+    mgc_stack.h \
+    game.h \
+    mgc_button.h \
+    mgc_recognizerexternalarea.h \
+    h_street.h \
+    solvershell.h \
+    gamestat.h \
+    solver.h \
+    server.h
 
 FORMS    += mainwindow.ui
 

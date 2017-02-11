@@ -8,13 +8,11 @@ MGC_Element::MGC_Element(QString id, MGC_Element *parent, const QJsonObject &set
         m_id = m_settings["id"].toString();
     }
 
-//    if (m_settings.contains("element_area")) {
-        m_elementArea = convertQJsonArray2QRect(m_settings["element_area"].toArray());
-//    }
+    m_elementArea = convertQJsonArray2QRect(m_settings["element_area"].toArray());
 
     if (!m_parent) return;
     m_elementWidget = new QLabel(m_parent->m_elementWidget);
-    m_elementWidget->setStyleSheet("QLabel {border: 0px solid blue;}");
+    m_elementWidget->setStyleSheet("QLabel {border: 0px solid blue;}");    
     m_parent->m_children.insert(m_id, this);
 }
 
@@ -60,7 +58,7 @@ void MGC_Element::processNextScreen()
 
 void MGC_Element::render()
 {
-    if (m_isVisible) {
+    if (m_isVisible && !m_isCovered) {
         show();
         for (QString curChildKey: m_children.keys()) {
             m_children[curChildKey]->render();
@@ -71,9 +69,9 @@ void MGC_Element::render()
 }
 
 void MGC_Element::show()
-{    
+{
     m_elementWidget->setGeometry(m_elementArea);
-    if (doDrawElementMat) m_elementWidget->setPixmap(convertMat2Pixmap(m_elementMat));
+    if (m_doDrawElementMat) m_elementWidget->setPixmap(convertMat2Pixmap(m_elementMat));
     m_elementWidget->show();
 }
 

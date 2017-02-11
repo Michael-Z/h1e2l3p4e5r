@@ -34,6 +34,11 @@ private:
     QueueOfMat_t m_screensQueue;
     QScreen *m_primaryScreen;
     QJsonObject m_tableSettings;
+
+signals:
+
+public slots:
+
 };
 
 #endif // MGC_SCREEN_H

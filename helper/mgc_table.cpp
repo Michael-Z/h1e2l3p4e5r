@@ -21,12 +21,15 @@ MGC_Table::MGC_Table(QString id, MGC_Element *parent, const QJsonObject &setting
         delete tableIdSignElement;
         return;
     }
+
+
+
     m_tableId = new MGC_Recognizer(QString("table_id"), this, m_settings["table_id"].toObject());
     m_tableId->m_elementArea.moveLeft(m_tableId->m_elementArea.x() + tableIdSignElement->m_foundPoints[0].x() + tableIdSignElement->m_elementArea.x());
     m_tableId->m_elementArea.moveTop(m_tableId->m_elementArea.y() + tableIdSignElement->m_foundPoints[0].y() + tableIdSignElement->m_elementArea.y());
     m_tableId->refreshElementMat();
     m_tableId->addMaskFromElementMat();    
-    m_tableId->doDrawElementMat = true;
+    m_tableId->m_doDrawElementMat = true;
     delete tableIdSignElement;
 
     m_baseOffsetSign = new MGC_Recognizer(QString("base_offset_sign"), this, m_settings["base_offset_sign"].toObject());
@@ -35,7 +38,7 @@ MGC_Table::MGC_Table(QString id, MGC_Element *parent, const QJsonObject &setting
     m_baseOffsetSign->m_elementArea.moveTo(m_baseOffsetSignOffset);
     m_baseOffsetSign->m_elementArea.setWidth(m_baseOffsetSign->m_mask.cols);
     m_baseOffsetSign->m_elementArea.setHeight(m_baseOffsetSign->m_mask.rows);
-    m_baseOffsetSign->doDrawElementMat = true;
+    m_baseOffsetSign->m_doDrawElementMat = true;
 
     QJsonObject tableMAX6Settings = m_settings["MAX6"].toObject();
 
@@ -58,12 +61,29 @@ MGC_Table::MGC_Table(QString id, MGC_Element *parent, const QJsonObject &setting
     m_call_button = new MGC_Element("call_button", this, m_settings["call_button"].toObject());
     m_fold_button = new MGC_Element("fold_button", this, m_settings["fold_button"].toObject());
 
+    m_raise_button->setBorder("5", "solid", "black");
+    m_call_button->setBorder("5", "solid", "black");
+    m_fold_button->setBorder("5", "solid", "black");
+
+
     m_call_button_sign = new MGC_Recognizer("call_button_sign", m_call_button,
         m_settings["call_button"].toObject()["call_button_sign"].toObject());
     m_fold_button_sign = new MGC_Recognizer("fold_button_sign", m_fold_button,
         m_settings["fold_button"].toObject()["fold_button_sing"].toObject());
 
+//    m_call_button_sign->m_misrecMode = MisrecMode::SIMPLE_REQUESTING;
+//    m_fold_button_sign->m_misrecMode = MisrecMode::SIMPLE_REQUESTING;
+
     setBorder("7", "solid", "black");
+
+    m_solverShell = new SolverShell(this);
+    m_game = new Game(this, m_solverShell);
+}
+
+MGC_Table::~MGC_Table()
+{
+    if (m_solverShell != nullptr) delete m_solverShell;
+    if (m_game != nullptr) delete m_game;
 }
 
 bool MGC_Table::processOnDown()
@@ -87,15 +107,17 @@ bool MGC_Table::processOnDown()
             continue;
         }
         m_isVisible = true;
-        m_disappearedCounter = 0;
+        m_isCovered = false;
+        m_isCoveredCounter = 0;
         m_baseOffsetSign->m_elementArea.moveTo(m_baseOffsetSignOffset.x(), m_baseOffsetSignOffset.y());
         it = foundSignPoints.erase(it);
         break;
     }
 
     if (!m_isVisible) {
-        ++m_disappearedCounter;
-        if (m_disappearedCounter > m_destroy_after_disable) {
+        m_isCovered = true;
+        m_isCoveredCounter++;
+        if (m_isCoveredCounter > m_destroy_after_disable) {
             this->deleteLater();
         }
         return false;
@@ -110,22 +132,47 @@ bool MGC_Table::processOnDown()
     m_call_button_sign->recognizeMaskInSet();
     m_fold_button_sign->recognizeMaskInSet();
 
-    if (m_call_button_sign->m_recognizedMaskName == "action" &&
-            m_fold_button_sign->m_recognizedMaskName == "action") {
-        m_raise_button->setBorder("5", "solid", "black");
-        m_call_button->setBorder("5", "solid", "black");
-        m_fold_button->setBorder("5", "solid", "black");
+    if (m_call_button_sign->m_recMask == "") {
+        m_call_button->m_isCovered = true;
+        m_call_button->m_isCoveredCounter++;
     } else {
-        m_raise_button->setBorder("1", "solid", "black");
-        m_call_button->setBorder("1", "solid", "black");
-        m_fold_button->setBorder("1", "solid", "black");
+        m_call_button->m_isCovered = false;
+        m_call_button->m_isCoveredCounter = 0;
+
+        if (m_call_button_sign->m_recMask.left(6) == "action") {
+            m_call_button->m_isVisible = true;
+            m_raise_button->m_isVisible = true;
+
+            if (m_fold_button_sign->m_recMask == "") {
+                m_fold_button->m_isCovered = true;
+                m_fold_button->m_isCoveredCounter++;
+            } else {
+                m_fold_button->m_isCovered = false;
+                m_fold_button->m_isCoveredCounter = 0;
+
+                if (m_fold_button_sign->m_recMask.left(6) == "action")  {
+                    m_fold_button->m_isVisible = true;
+                } else if (m_fold_button_sign->m_recMask.left(5) == "empty") {
+                    m_fold_button->m_isVisible = false;
+                } else {
+                    if (m_fold_button_sign->m_misrecMode != MisrecMode::SIMPLE_REQUESTING) throw "w";
+                }
+            }
+
+        } else if (m_call_button_sign->m_recMask.left(5) == "empty") {
+            m_call_button->m_isVisible = false;
+            m_raise_button->m_isVisible = false;
+            m_fold_button->m_isVisible = false;
+        } else {
+            if (m_call_button_sign->m_misrecMode != MisrecMode::SIMPLE_REQUESTING) throw "w";
+        }
     }
 
     return true;
 }
 
 void MGC_Table::processOnUp()
-{
-
+{    
+    m_game->process();
 }
 

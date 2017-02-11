@@ -13,6 +13,7 @@
 class MGC_Card : public MGC_Element
 {
 public:
+    QString m_card = "";
     MGC_Card(QString &id, MGC_Element *parent, QJsonObject &settings);
 
     MGC_Recognizer *m_suit = nullptr;
